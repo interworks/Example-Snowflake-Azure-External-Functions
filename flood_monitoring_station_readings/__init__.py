@@ -44,15 +44,47 @@ def retrieve_latest_reading(station_id: str) :
 ## Snowflake-structured array of data
 def retrieve_and_parse_latest_readings(station_id: str) :
 
+  ### Execute the function to send a request to the
+  ### API to retrieve the latest readings for a given station
   latest_reading_json = retrieve_latest_reading(station_id=station_id)
 
-  ## Retrieve the datetime and value for the latest reading from latestReadingJSON
+  ### Retrieve the datetime and value for the latest reading from latestReadingJSON
   latest_reading_datetime = latest_reading_json["items"][0]["latestReading"]["dateTime"]
   latest_reading_value = latest_reading_json["items"][0]["latestReading"]["value"]
 
-  ## Return the combined output
+  ### Return the combined output
   parsed_reading_json = {"datetime": latest_reading_datetime, "value" : latest_reading_value}
   return parsed_reading_json
+
+## Create the function to retrieve all latest readings from an incoming
+## Snowflake-structured array of data
+def retrieve_all_latest_readings(station_array_list: list) :
+  ### Iterate over input rows to
+  ### perform the row-level function and
+  ### store the results in a single list
+  ### that is a compatible response for
+  ### a Snowflake External Function.
+  response_list = []
+  for station_array in station_array_list :
+
+    ### Retrieve the row number
+    row_number = station_array[0]
+    
+    ### Retrieve the station ID
+    station_id = station_array[1]
+
+    ### try/except is used for error handling
+    try:
+      #### Execute the function to retrieve and parse the reading
+      parsed_reading_json = retrieve_and_parse_latest_readings(station_id=station_id)
+    except:
+      parsed_reading_json = "Error"
+    
+    ### Append the result to the list
+    ### of rows to return
+    response_list.append([row_number, parsed_reading_json])
+
+  return response_list
 
 ## Define the main function
 def main(req: func.HttpRequest) -> func.HttpResponse:
@@ -91,25 +123,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
       #### store the results in a single list
       #### that is a compatible response for
       #### a Snowflake External Function.
-      response_list = []
-      for input_row in input_rows :
-
-        ##### Retrieve the row number
-        row_number = input_row[0]
-        
-        ##### Retrieve the station ID for the row
-        station_id = input_row[1]
-
-        ##### try/except is used for error handling
-        try:
-          ###### Calculate the rowSum
-          parsed_reading_json = retrieve_and_parse_latest_readings(station_id=station_id)
-        except:
-          parsed_reading_json = "Error"
-        
-        ##### Append the result to the list
-        ##### of rows to return
-        response_list.append([row_number, parsed_reading_json])
+      response_list = retrieve_all_latest_readings(input_rows)
 
       #### Put response into a JSON dictionary,
       #### then convert it to a string for transmission
