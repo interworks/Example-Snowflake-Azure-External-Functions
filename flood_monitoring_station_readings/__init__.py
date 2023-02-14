@@ -1,8 +1,8 @@
 
-# Snowflake External Function - Sum
+# Snowflake External Function - Flood Monitoring Station Readings
 
-## Simply adds together the input variables
-## which are expected as numbers
+## Sends a request to the API for UK flood monitoring
+## stations to retrieve the latest reading
 
 ## Import Azure modules
 import azure.functions as func

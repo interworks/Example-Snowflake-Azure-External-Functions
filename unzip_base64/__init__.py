@@ -1,4 +1,10 @@
 
+# Snowflake External Function - Unzip Base64
+
+## Receives a base64-encoded string of a zipped
+## single file, unzips it and returns the content
+## of the file
+
 ## Import Azure modules
 import azure.functions as func
 import logging
